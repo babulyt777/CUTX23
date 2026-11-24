@@ -1,0 +1,544 @@
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MotionType Studio Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#090d16;color:white;font-family:Arial}
+header{padding:15px;background:#151e2d;display:flex;justify-content:space-between;align-items:center}
+.brand{font-weight:900;font-size:20px}
+.brand span{color:#f4c542}
+button{padding:10px 13px;border:1px solid #39475d;background:#253147;color:white;border-radius:7px;cursor:pointer}
+button:hover{border-color:#f4c542}
+.primary{background:#f4c542;color:#111;font-weight:bold}
+.app{display:grid;grid-template-columns:270px 1fr 270px;gap:12px;padding:12px}
+.panel{background:#151e2d;border-radius:10px;padding:14px}
+h3{color:#f4c542;font-size:14px}
+label{display:block;font-size:12px;color:#cbd5e1;margin:12px 0 5px}
+input,select,textarea{width:100%;padding:9px;background:#090f1c;color:white;border:1px solid #39475d;border-radius:6px}
+textarea{height:150px;resize:vertical}
+input[type=color]{height:40px;padding:3px}
+input[type=range]{padding:0}
+.stage{background:#030509;min-height:350px;display:flex;align-items:center;justify-content:center;border-radius:10px}
+canvas{max-width:100%;max-height:65vh}
+.controls,.timeline{background:#151e2d;padding:12px;border-radius:9px;margin-top:10px}
+.controls{display:flex;gap:8px;align-items:center}
+.controls input{flex:1}
+#scenes{display:flex;gap:8px;overflow:auto;margin-top:10px}
+.scene{min-width:110px}
+.scene.active{border-color:#f4c542}
+.status{font-size:12px;color:#65d6c4;margin-top:10px}
+.progress{height:7px;background:#303b50;border-radius:10px;overflow:hidden;margin-top:10px}
+#progressBar{height:100%;width:0;background:#f4c542}
+@media(max-width:900px){.app{grid-template-columns:1fr}.stage{min-height:280px}canvas{max-height:55vh}}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="brand">MOTION<span>TYPE</span> STUDIO PRO</div>
+<button class="primary" id="export">EXPORT MP4</button>
+</header>
+
+<div class="app">
+
+<section class="panel">
+<h3>01 — SCRIPT EDITOR</h3>
+<label>One scene per line</label>
+<textarea id="script">THIS IS YOUR MOMENT
+MAKE EVERY SECOND COUNT
+DREAM BIGGER
+WORK HARDER
+CHENNAI SUPER KINGS</textarea>
+<button class="primary" id="generate">GENERATE SCENES</button>
+
+<h3>02 — AUDIO</h3>
+<label>Upload MP3 / Audio</label>
+<input type="file" id="audioFile" accept="audio/*">
+<label>Audio volume</label>
+<input type="range" id="volume" min="0" max="1" step=".01" value=".8">
+
+<h3>03 — CAPTIONS</h3>
+<button id="srt">DOWNLOAD SRT</button>
+<button id="txt">DOWNLOAD TXT</button>
+<p style="font-size:11px;color:#9ca3af">SRT captions use your scene text and timings. Automatic speech transcription is not included.</p>
+
+<div class="status" id="status">Ready!</div>
+<div class="progress"><div id="progressBar"></div></div>
+</section>
+
+<section>
+<div class="stage">
+<canvas id="canvas" width="1080" height="1920"></canvas>
+</div>
+
+<div class="controls">
+<button class="primary" id="play">▶ PLAY</button>
+<button id="stop">■</button>
+<span id="clock">00:00</span>
+<input type="range" id="seek" min="0" max="100" value="0">
+</div>
+
+<div class="timeline">
+<strong>TIMELINE</strong>
+<div id="scenes"></div>
+</div>
+</section>
+
+<section class="panel">
+<h3>04 — ANIMATION</h3>
+<label>Text animation</label>
+<select id="animation">
+<option value="fade">Fade In</option>
+<option value="slideDown">Slide Down</option>
+<option value="slideUp">Slide Up</option>
+<option value="slideLeft">Slide Left</option>
+<option value="slideRight">Slide Right</option>
+<option value="showDown">Show Down</option>
+<option value="showUp">Show Up</option>
+<option value="showLeft">Show Left</option>
+<option value="showRight">Show Right</option>
+<option value="zoom">Zoom In</option>
+<option value="pop">Pop</option>
+<option value="type">Typewriter</option>
+<option value="blur">Blur Reveal</option>
+<option value="rotate">Rotate In</option>
+<option value="word">Word By Word</option>
+<option value="none">Instant</option>
+</select>
+
+<label>Scene duration</label>
+<input type="number" id="duration" min=".5" max="15" step=".5" value="2">
+
+<label>Animation speed</label>
+<input type="range" id="speed" min=".1" max="1.5" step=".05" value=".65">
+
+<label>Font</label>
+<select id="font">
+<option>Arial Black</option>
+<option>Impact</option>
+<option>Arial</option>
+<option>Georgia</option>
+<option>Courier New</option>
+<option>Trebuchet MS</option>
+</select>
+
+<label>Text size</label>
+<input type="range" id="size" min="35" max="190" value="100">
+
+<label>Letter spacing</label>
+<input type="range" id="spacing" min="-2" max="16" value="2">
+
+<label>Text colour</label>
+<input type="color" id="textColor" value="#ffffff">
+
+<label>Background colour</label>
+<input type="color" id="bgColor" value="#090b10">
+
+<label>Accent colour</label>
+<input type="color" id="accent" value="#f4c542">
+
+<label>Video resolution</label>
+<select id="resolution">
+<option value="1080">1080p</option>
+<option value="720">720p</option>
+</select>
+
+<label>Video format</label>
+<select id="ratio">
+<option value="portrait">9:16 Reels</option>
+<option value="landscape">16:9 YouTube</option>
+<option value="square">1:1 Square</option>
+<option value="classic">4:3 Classic</option>
+</select>
+
+<label>Background style</label>
+<select id="background">
+<option value="plain">Plain</option>
+<option value="gradient">Gradient</option>
+<option value="grid">Grid</option>
+<option value="radial">Radial</option>
+</select>
+
+<label><input type="checkbox" id="shadow" checked style="width:auto"> Text Shadow</label>
+<label><input type="checkbox" id="outline" style="width:auto"> Text Outline</label>
+<label><input type="checkbox" id="uppercase" checked style="width:auto"> Uppercase</label>
+</section>
+</div>
+
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
+<script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const canvas=$('canvas');
+const ctx=canvas.getContext('2d');
+
+let scenes=[],total=0,current=0,playing=false,raf=0,start=0;
+let audio=null,audioURL=null;
+let ffmpeg=null,ffmpegReady=false;
+
+function status(t){$('status').textContent=t}
+function fmt(t){return String(Math.floor(t/60)).padStart(2,'0')+':'+String(Math.floor(t%60)).padStart(2,'0')}
+
+function generate(){
+const d=Math.max(.5,Math.min(15,+$('duration').value||2));
+const lines=$('script').value.split('\n').map(x=>x.trim()).filter(Boolean);
+scenes=lines.map((text,i)=>({text,start:i*d,duration:d}));
+total=scenes.reduce((a,s)=>a+s.duration,0);
+current=0;
+renderScenes();
+draw(0);
+status(scenes.length+' scenes generated');
+}
+
+function renderScenes(){
+$('scenes').innerHTML='';
+scenes.forEach((s,i)=>{
+const b=document.createElement('button');
+b.className='scene'+(i===current?' active':'');
+b.textContent=(i+1)+'. '+s.text;
+b.onclick=()=>{pause();seek(s.start)};
+$('scenes').appendChild(b);
+});
+}
+
+function setRatio(){
+const r=$('ratio').value;
+let w=1080,h=1920;
+if(r==='landscape'){w=1920;h=1080}
+if(r==='square'){w=1080;h=1080}
+if(r==='classic'){w=1440;h=1080}
+const scale=$('resolution').value==='720'?720/1080:1;
+canvas.width=Math.round(w*scale);
+canvas.height=Math.round(h*scale);
+draw(current);
+}
+
+function bg(){
+const w=canvas.width,h=canvas.height;
+ctx.fillStyle=$('bgColor').value;
+ctx.fillRect(0,0,w,h);
+const style=$('background').value;
+const accent=$('accent').value;
+if(style==='gradient'){
+const g=ctx.createLinearGradient(0,0,w,h);
+g.addColorStop(0,$('bgColor').value);
+g.addColorStop(1,accent+'66');
+ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+}
+if(style==='radial'){
+const g=ctx.createRadialGradient(w/2,h/2,10,w/2,h/2,Math.max(w,h)*.7);
+g.addColorStop(0,accent+'55');g.addColorStop(1,$('bgColor').value);
+ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+}
+if(style==='grid'){
+ctx.strokeStyle='#ffffff15';
+for(let x=0;x<w;x+=70){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
+for(let y=0;y<h;y+=70){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+}
+}
+
+function draw(t=0){
+if(!scenes.length){bg();return}
+let idx=scenes.findIndex(s=>t>=s.start&&t<s.start+s.duration);
+if(idx<0)idx=scenes.length-1;
+current=idx;
+const s=scenes[idx],p=Math.max(0,Math.min(1,(t-s.start)/s.duration));
+const speed=+$('speed').value;
+const a=Math.min(1,p/Math.max(.08,speed/s.duration));
+const w=canvas.width,h=canvas.height;
+const anim=$('animation').value;
+const accent=$('accent').value;
+let text=$('uppercase').checked?s.text.toUpperCase():s.text;
+const font=$('font').value;
+let size=Math.min(w,h)*.105*(+$('size').value/100);
+let alpha=1,scale=1,dx=0,dy=0,rotation=0;
+const dist=Math.min(w,h)*.34;
+
+switch(anim){
+case'fade':alpha=a;break;
+case'slideDown':dy=-dist*(1-a);alpha=a;break;
+case'slideUp':dy=dist*(1-a);alpha=a;break;
+case'slideLeft':dx=dist*(1-a);alpha=a;break;
+case'slideRight':dx=-dist*(1-a);alpha=a;break;
+case'showDown':dy=-dist*(1-a);break;
+case'showUp':dy=dist*(1-a);break;
+case'showLeft':dx=dist*(1-a);break;
+case'showRight':dx=-dist*(1-a);break;
+case'zoom':scale=.25+.75*a;alpha=a;break;
+case'pop':scale=a<.8?.3+a:1.1-(a-.8)*.5;break;
+case'type':text=text.slice(0,Math.ceil(text.length*a));break;
+case'blur':alpha=a;break;
+case'rotate':rotation=-(1-a)*.2;scale=.8+.2*a;alpha=a;break;
+}
+
+bg();
+ctx.save();
+ctx.globalAlpha=alpha;
+ctx.translate(w/2+dx,h/2+dy);
+ctx.rotate(rotation);
+ctx.scale(scale,scale);
+ctx.translate(-w/2,-h/2);
+
+ctx.font=`900 ${size}px "${font}"`;
+ctx.textAlign='center';
+ctx.textBaseline='middle';
+ctx.fillStyle=$('textColor').value;
+ctx.strokeStyle=accent;
+ctx.lineWidth=Math.max(3,size*.025);
+ctx.shadowColor=$('shadow').checked?'#000b':'transparent';
+ctx.shadowBlur=$('shadow').checked?size*.15:0;
+ctx.shadowOffsetY=size*.05;
+
+let words=text.split(/\s+/);
+let lines=[],line='';
+const max=w*.82;
+words.forEach(word=>{
+let test=line?line+' '+word:word;
+if(ctx.measureText(test).width>max&&line){lines.push(line);line=word}
+else line=test;
+});
+if(line)lines.push(line);
+
+if(anim==='word'){
+let count=Math.ceil(words.length*Math.min(1,p/.92));
+text=words.slice(0,count).join(' ');
+lines=[text];
+}
+const lineH=size*1.18;
+lines.forEach((line,i)=>{
+const y=h/2+(i-(lines.length-1)/2)*lineH;
+if($('outline').checked)ctx.strokeText(line,w/2,y);
+ctx.fillText(line,w/2,y);
+});
+ctx.restore();
+
+ctx.fillStyle=accent;
+ctx.fillRect(w*.08,h*.91,w*.84*p,Math.max(5,h*.004));
+ctx.fillStyle='#ffffff99';
+ctx.font=`${Math.max(18,w*.018)}px Arial`;
+ctx.textAlign='left';
+ctx.fillText(`${idx+1} / ${scenes.length}`,w*.08,h*.96);
+
+$('clock').textContent=fmt(t)+' / '+fmt(total);
+$('seek').value=total?Math.min(100,t/total*100):0;
+[...$('scenes').children].forEach((b,i)=>b.classList.toggle('active',i===idx));
+}
+
+function pause(){
+playing=false;
+cancelAnimationFrame(raf);
+$('play').textContent='▶ PLAY';
+if(audio)audio.pause();
+}
+
+function tick(){
+if(!playing)return;
+const t=(performance.now()-start)/1000;
+if(t>=total){pause();draw(total);return}
+draw(t);
+raf=requestAnimationFrame(tick);
+}
+
+function play(){
+if(!scenes.length)generate();
+if(!total)return;
+if(current>=total-.05)current=0;
+playing=true;
+start=performance.now()-current*1000;
+$('play').textContent='❚❚ PAUSE';
+if(audio){audio.currentTime=current;audio.play().catch(()=>{})}
+tick();
+}
+
+function seek(t){
+current=Math.max(0,Math.min(total-.001,t));
+if(audio)audio.currentTime=current;
+start=performance.now()-current*1000;
+draw(current);
+}
+
+function download(name,blob){
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;a.download=name;a.click();
+setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+
+function srtTime(t){
+const ms=Math.floor((t%1)*1000);
+return `${fmt(Math.floor(t/3600)*60)}:${String(Math.floor(t%60)).padStart(2,'0')},${String(ms).padStart(3,'0')}`.replace(/^(\d{2}):/,'00:$1:');
+}
+
+$('generate').onclick=()=>{pause();generate()};
+$('play').onclick=()=>playing?pause():play();
+$('stop').onclick=()=>{pause();seek(0)};
+$('seek').oninput=e=>{pause();seek(total*(+e.target.value/100))};
+$('ratio').onchange=setRatio;
+$('resolution').onchange=setRatio;
+$('duration').onchange=generate;
+
+$('audioFile').onchange=e=>{
+const file=e.target.files[0];
+if(!file)return;
+if(audioURL)URL.revokeObjectURL(audioURL);
+audioURL=URL.createObjectURL(file);
+audio=new Audio(audioURL);
+audio.preload='auto';
+audio.volume=+$('volume').value;
+audio.onloadedmetadata=()=>status('Audio loaded: '+fmt(audio.duration));
+};
+
+$('volume').oninput=()=>{if(audio)audio.volume=+$('volume').value};
+
+$('srt').onclick=()=>{
+if(!scenes.length)generate();
+const data=scenes.map((s,i)=>
+`${i+1}\n00:${fmt(s.start)} --> 00:${fmt(s.start+s.duration)}\n${s.text}\n`
+).join('\n');
+download('captions.srt',new Blob([data],{type:'text/plain'}));
+};
+
+$('txt').onclick=()=>download('script.txt',new Blob([$ ('script').value],{type:'text/plain'}));
+
+async function loadFFmpeg(){
+if(ffmpegReady)return true;
+if(!window.FFmpegWASM||!window.FFmpegUtil){
+status('FFmpeg library could not load. Check internet and refresh.');
+return false;
+}
+try{
+const {FFmpeg}=FFmpegWASM;
+ffmpeg=new FFmpeg();
+ffmpeg.on('log',({message})=>{if(message)status(message.slice(0,100))});
+await ffmpeg.load({
+coreURL:'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js',
+wasmURL:'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm'
+});
+ffmpegReady=true;
+return true;
+}catch(e){
+status('FFmpeg load failed: '+e.message);
+return false;
+}
+}
+
+async function exportMP4(){
+if(!scenes.length)generate();
+if(!total)return;
+$('export').disabled=true;
+pause();
+
+try{
+status('Loading MP4 encoder…');
+const ok=await loadFFmpeg();
+if(!ok)return;
+
+const fps=30;
+const stream=canvas.captureStream(fps);
+let audioContext=null,audioSource=null,audioDestination=null;
+let recorder=null,chunks=[];
+
+if(audio){
+audioContext=new (window.AudioContext||window.webkitAudioContext)();
+await audioContext.resume();
+audioSource=audioContext.createMediaElementSource(audio);
+audioDestination=audioContext.createMediaStreamDestination();
+audioSource.connect(audioDestination);
+audioSource.connect(audioContext.destination);
+audioDestination.stream.getAudioTracks().forEach(track=>stream.addTrack(track));
+}
+
+const mime=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(MediaRecorder.isTypeSupported);
+if(!mime)throw Error('Browser does not support recording');
+
+recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:8000000});
+recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+
+const finished=new Promise((resolve,reject)=>{
+recorder.onstop=resolve;
+recorder.onerror=()=>reject(Error('Recording failed'));
+});
+
+recorder.start();
+const begin=performance.now();
+
+if(audio){
+audio.currentTime=0;
+audio.volume=+$('volume').value;
+await audio.play();
+}
+
+status('Rendering video… please wait');
+await new Promise(resolve=>{
+function frame(){
+const t=(performance.now()-begin)/1000;
+draw(Math.min(t,total));
+$('progressBar').style.width=Math.min(100,t/total*100)+'%';
+if(t>=total){
+if(audio)audio.pause();
+resolve();
+}else requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+});
+
+recorder.stop();
+await finished;
+stream.getTracks().forEach(t=>t.stop());
+if(audioContext)await audioContext.close();
+
+const inputBlob=new Blob(chunks,{type:mime});
+const inputData=new Uint8Array(await inputBlob.arrayBuffer());
+await ffmpeg.writeFile('input.webm',inputData);
+
+status('Converting to MP4 H.264…');
+let args=[
+'-i','input.webm',
+'-c:v','libx264',
+'-preset','ultrafast',
+'-crf','20',
+'-pix_fmt','yuv420p',
+'-r','30',
+'-movflags','+faststart'
+];
+
+if(audio){
+args.push('-c:a','aac','-b:a','192k');
+}else{
+args.push('-an');
+}
+args.push('output.mp4');
+
+await ffmpeg.exec(args);
+const result=await ffmpeg.readFile('output.mp4');
+download('MotionType-Video.mp4',new Blob([result.buffer],{type:'video/mp4'}));
+
+await ffmpeg.deleteFile('input.webm');
+await ffmpeg.deleteFile('output.mp4');
+$('progressBar').style.width='100%';
+status('MP4 export complete! 🎉');
+
+}catch(e){
+status('Export error: '+e.message);
+}finally{
+$('export').disabled=false;
+}
+}
+
+$('export').onclick=exportMP4;
+
+['animation','speed','font','size','spacing','textColor','bgColor','accent','background','shadow','outline','uppercase'].forEach(id=>{
+$(id).addEventListener('input',()=>draw(current));
+});
+
+generate();
+setRatio();
+})();
+</script>
+</body>
+  </html>
